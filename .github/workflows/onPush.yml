@@ -1,0 +1,67 @@
+name: On push
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch: null
+permissions:
+  pull-requests: read
+jobs:
+  analysis:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Analyze with SonarCloud
+        uses: SonarSource/sonarcloud-github-action@de2e56b42aa84d0b1c5b622644ac17e505c9a049
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          args: -Dsonar.projectKey=aleksandarb99_accommodation
+            -Dsonar.organization=aleksandarb99
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: "17"
+          distribution: temurin
+          cache: maven
+      - name: Test with Maven
+        run: mvn -B test --file pom.xml
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: "17"
+          distribution: temurin
+          cache: maven
+      - name: Build with Maven
+        run: mvn -B package --file pom.xml -DskipTests
+  push_docker_image:
+    needs:
+      - build
+      - analysis
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Extract Version from pom.xml
+        run: |
+          version=$(grep -m 1 "<version>" pom.xml | awk -F'[<>]' '{print $3}')
+          echo "VERSION_OF_POM=${version}" >> $GITHUB_ENV
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Build and push
+        uses: docker/build-push-action@v4
+        with:
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/reservation:${{ env.VERSION_OF_POM }},${{
+            secrets.DOCKERHUB_USERNAME }}/reservation:latest
