@@ -37,7 +37,7 @@ class ReservationServiceIntegrationTest {
     private ReservationRepository reservationRepository;
 
     @Test
-    void createAccommodationTest() {
+    void createReservationTest() {
         // Given
         ReservationDto reservationDto = ReservationDto.builder()
                 .accommodationId(1L)

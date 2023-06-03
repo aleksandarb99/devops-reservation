@@ -16,7 +16,7 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
           args:
-            -Dsonar.projectKey=aleksandarb99_accommodation
+            -Dsonar.projectKey=aleksandarb99_devops-reservation
             -Dsonar.organization=aleksandarb99
   test:
     runs-on: ubuntu-latest
