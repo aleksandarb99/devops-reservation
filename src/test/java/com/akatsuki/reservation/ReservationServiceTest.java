@@ -1,6 +1,6 @@
 package com.akatsuki.reservation;
 
-import com.akatsuki.reservation.dto.ReservationDto;
+import com.akatsuki.reservation.dto.CreateReservationDto;
 import com.akatsuki.reservation.model.Reservation;
 import com.akatsuki.reservation.repository.ReservationRepository;
 import com.akatsuki.reservation.service.impl.ReservationServiceImpl;
@@ -27,10 +27,10 @@ public class ReservationServiceTest {
     @Test
     void createReservationTest() {
         // Given
-        ReservationDto reservationDto = new ReservationDto();
+        CreateReservationDto reservationDto = new CreateReservationDto();
         Reservation reservation = new Reservation();
 
-        when(modelMapperMock.map(any(ReservationDto.class), eq(Reservation.class))).thenReturn(reservation);
+        when(modelMapperMock.map(any(CreateReservationDto.class), eq(Reservation.class))).thenReturn(reservation);
 
         // When
         reservationService.createReservation(reservationDto);

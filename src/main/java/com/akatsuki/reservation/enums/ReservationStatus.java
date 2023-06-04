@@ -4,7 +4,7 @@ public enum ReservationStatus {
 
     REQUESTED("Requested"),
     APPROVED("Approved"),
-    DENIED("Denied");
+    CANCELLED("Cancelled");
 
     ReservationStatus(String label) {
     }

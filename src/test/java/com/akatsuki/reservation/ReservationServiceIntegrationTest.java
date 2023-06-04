@@ -1,7 +1,6 @@
 package com.akatsuki.reservation;
 
-import com.akatsuki.reservation.dto.ReservationDto;
-import com.akatsuki.reservation.enums.ReservationStatus;
+import com.akatsuki.reservation.dto.CreateReservationDto;
 import com.akatsuki.reservation.repository.ReservationRepository;
 import com.akatsuki.reservation.service.ReservationService;
 import org.junit.jupiter.api.Assertions;
@@ -39,11 +38,10 @@ class ReservationServiceIntegrationTest {
     @Test
     void createReservationTest() {
         // Given
-        ReservationDto reservationDto = ReservationDto.builder()
+        CreateReservationDto reservationDto = CreateReservationDto.builder()
                 .accommodationId(1L)
                 .startDate(LocalDate.of(2022, 2, 10))
                 .endDate(LocalDate.of(2022, 2, 15))
-                .status(ReservationStatus.REQUESTED)
                 .numberOfGuests(1)
                 .build();
 
