@@ -1,10 +1,15 @@
 package com.akatsuki.reservation.controller;
 
-import com.akatsuki.reservation.dto.ReservationDto;
+import com.akatsuki.reservation.dto.AccommodationInfoDTO;
+import com.akatsuki.reservation.dto.CreateReservationDto;
+import com.akatsuki.reservation.dto.ReservationDetailsDTO;
+import com.akatsuki.reservation.enums.ReservationStatus;
 import com.akatsuki.reservation.service.ReservationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -14,7 +19,45 @@ public class ReservationController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public void createReservation(@RequestBody ReservationDto reservationDto) { // TODO Add @Valid if DTO is validated
-        reservationService.createReservation(reservationDto);
+    public void createReservation(@RequestBody CreateReservationDto createReservationDto) { // TODO Add @Valid if DTO is validated
+        reservationService.createReservation(createReservationDto);
+    }
+
+    @PutMapping("/cancel/{reservationId}")
+    @ResponseStatus(HttpStatus.OK)
+    public void cancelReservation(@PathVariable("reservationId") Long reservationId) {
+        reservationService.cancelReservation(reservationId);
+    }
+
+    @GetMapping("/by-user-and-status/{userId}")
+    @ResponseStatus(HttpStatus.OK)
+    public List<ReservationDetailsDTO> getReservations(@RequestParam(name = "status", required = false) ReservationStatus status,
+                                                       @PathVariable("userId") Long userId) {    // TODO Take it from token
+        return reservationService.getReservations(status, userId);
+    }
+
+    @GetMapping("/by-accommodation-and-status/{accommodationId}")
+    @ResponseStatus(HttpStatus.OK)
+    public List<ReservationDetailsDTO> getReservationsByAccommodation(@RequestParam(name = "status", required = false) ReservationStatus status,
+                                                       @PathVariable("accommodationId") Long accommodationId) {
+        return reservationService.getReservationsByAccommodation(status, accommodationId);
+    }
+
+    @PutMapping("/deny/{reservationId}")
+    @ResponseStatus(HttpStatus.OK)
+    public void denyReservationRequest(@PathVariable("reservationId") Long reservationId) {
+        reservationService.denyReservation(reservationId);
+    }
+
+    @PutMapping("/approve/{reservationId}")
+    @ResponseStatus(HttpStatus.OK)
+    public void approveReservationRequest(@PathVariable("reservationId") Long reservationId) {
+        reservationService.approveReservation(reservationId);
+    }
+
+    @GetMapping("/check-reservations-of-accommodation")
+    @ResponseStatus(HttpStatus.OK)
+    public boolean checkReservationsOfAccommodation(@RequestBody AccommodationInfoDTO accommodationInfoDTO) {
+        return reservationService.checkReservationsOfAccommodation(accommodationInfoDTO);
     }
 }

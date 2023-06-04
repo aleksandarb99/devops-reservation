@@ -30,7 +30,7 @@ public class DbInitializationStartupRunner implements ApplicationRunner {
                 .accommodationId(1L)
                 .startDate(LocalDate.of(2023, 5, 10))
                 .endDate(LocalDate.of(2023, 5, 15))
-                .status(ReservationStatus.DENIED)
+                .status(ReservationStatus.CANCELLED)
                 .numberOfGuests(4)
                 .build();
         var r3 = Reservation.builder()

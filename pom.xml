@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.akatsuki</groupId>
 	<artifactId>reservation</artifactId>
-	<version>0.0.1</version>
+	<version>0.1.1</version>
 	<name>reservation</name>
 	<parent>
 		<groupId>org.springframework.boot</groupId>
@@ -18,6 +18,8 @@
 		<modelmapper.version>3.1.1</modelmapper.version>
 		<mockito.version>5.1.1</mockito.version>
 		<testcontainers.version>1.18.1</testcontainers.version>
+		<sonar.organization>aleksandarb99</sonar.organization>
+		<sonar.host.url>https://sonarcloud.io/</sonar.host.url>
 	</properties>
 	<dependencyManagement>
 		<dependencies>
