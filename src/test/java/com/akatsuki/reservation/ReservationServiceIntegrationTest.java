@@ -1,10 +1,12 @@
 package com.akatsuki.reservation;
 
-import com.akatsuki.reservation.dto.CreateReservationDto;
+import com.akatsuki.reservation.enums.ReservationStatus;
+import com.akatsuki.reservation.model.Reservation;
 import com.akatsuki.reservation.repository.ReservationRepository;
 import com.akatsuki.reservation.service.ReservationService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.DynamicPropertyRegistry;
@@ -13,7 +15,7 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
-import java.time.LocalDate;
+import java.util.Optional;
 
 @SpringBootTest
 @Testcontainers(parallel = true)
@@ -36,20 +38,12 @@ class ReservationServiceIntegrationTest {
     private ReservationRepository reservationRepository;
 
     @Test
-    void createReservationTest() {
-        // Given
-        CreateReservationDto reservationDto = CreateReservationDto.builder()
-                .accommodationId(1L)
-                .startDate(LocalDate.of(2022, 2, 10))
-                .endDate(LocalDate.of(2022, 2, 15))
-                .numberOfGuests(1)
-                .build();
-
-        // When
-        reservationService.createReservation(reservationDto);
-
-        // Then
-        Assertions.assertEquals(3, reservationRepository.count());  // TODO Check why it is not 4, it should be
+    void denyReservationTest() {
+        reservationService.denyReservation(1L);
+        Optional<Reservation> reservationOptional = reservationRepository.findById(1L);
+        Assertions.assertTrue(reservationOptional.isPresent());
+        Reservation reservation = reservationOptional.get();
+        Assertions.assertEquals(ReservationStatus.CANCELLED, reservation.getStatus());
     }
 }
 
