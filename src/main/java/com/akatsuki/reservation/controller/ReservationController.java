@@ -36,6 +36,7 @@ public class ReservationController {
         return reservationService.getReservations(status, userId);
     }
 
+    // TODO Check this one, once you integrate with Auth
     @GetMapping("/by-accommodation-and-status/{accommodationId}")
     @ResponseStatus(HttpStatus.OK)
     public List<ReservationDetailsDTO> getReservationsByAccommodation(@RequestParam(name = "status", required = false) ReservationStatus status,

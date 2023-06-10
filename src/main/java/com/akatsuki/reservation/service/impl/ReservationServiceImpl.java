@@ -1,11 +1,9 @@
 package com.akatsuki.reservation.service.impl;
 
-import com.akatsuki.reservation.dto.AccommodationInfoDTO;
-import com.akatsuki.reservation.dto.CreateReservationDto;
-import com.akatsuki.reservation.dto.ReservationDetailsDTO;
-import com.akatsuki.reservation.dto.UserDetailsDTO;
+import com.akatsuki.reservation.dto.*;
 import com.akatsuki.reservation.enums.ReservationStatus;
 import com.akatsuki.reservation.exception.BadRequestException;
+import com.akatsuki.reservation.feignclients.AccommodationFeignClient;
 import com.akatsuki.reservation.model.Reservation;
 import com.akatsuki.reservation.repository.ReservationRepository;
 import com.akatsuki.reservation.service.ReservationService;
@@ -24,36 +22,38 @@ public class ReservationServiceImpl implements ReservationService {
     private final ReservationRepository reservationRepository;
     private final ModelMapper modelMapper;
 
+    private final AccommodationFeignClient accommodationFeignClient;
+
     @Override
-    public void createReservation(CreateReservationDto reservationDto) {
+    public void createReservation(CreateReservationDto createReservationDto) {
+        AvailabilityCheckResponseDto availabilityCheckResponseDto = checkAccommodationAvailability(createReservationDto);
         // Check if accommodation is available for chosen dates
-        boolean isAvailable = true;         // TODO Check availability for chosen reservation, and calculate current price
-        if (!isAvailable) {
+        if (!availabilityCheckResponseDto.isAvailable()) {
             throw new BadRequestException("It is not possible to create reservation for requested accommodation and date!");
         }
-        Reservation reservation = modelMapper.map(reservationDto, Reservation.class);
-//        reservation.setTotalPrice(response.getTotalPrice());
+
         // Fetch reservations for chosen accommodation
         List<Reservation> approvedReservations = reservationRepository.findAllByAccommodationIdAndStatus(
-                reservation.getAccommodationId(), ReservationStatus.APPROVED);
+                createReservationDto.getAccommodationId(), ReservationStatus.APPROVED);
 
         for (Reservation approvedReservation : approvedReservations) {
-            if (reservation.getStartDate().isAfter(approvedReservation.getStartDate()) && reservation.getStartDate().isBefore(approvedReservation.getEndDate())) {
+            if (createReservationDto.getStartDate().isAfter(approvedReservation.getStartDate()) && createReservationDto.getStartDate().isBefore(approvedReservation.getEndDate())) {
                 throw new BadRequestException("Selected date range is overlapping with existing reservations!");
             }
-            if (approvedReservation.getStartDate().isAfter(reservation.getStartDate()) && approvedReservation.getStartDate().isBefore(reservation.getEndDate())) {
+            if (approvedReservation.getStartDate().isAfter(createReservationDto.getStartDate()) && approvedReservation.getStartDate().isBefore(createReservationDto.getEndDate())) {
                 throw new BadRequestException("Selected date range is overlapping with existing reservations!");
             }
         }
 
-        boolean isAutomatic = false;    // TODO Get from response
+        Reservation reservation = modelMapper.map(createReservationDto, Reservation.class);
         // If it needs manual approval, save it as a request
-        if (isAutomatic) {
+        if (availabilityCheckResponseDto.isAutomaticApprove()) {
             reservation.setStatus(ReservationStatus.APPROVED);
         } else {
             reservation.setStatus(ReservationStatus.REQUESTED);
         }
 
+        reservation.setTotalPrice(availabilityCheckResponseDto.getTotalCost());
         reservationRepository.save(reservation);
     }
 
@@ -174,5 +174,16 @@ public class ReservationServiceImpl implements ReservationService {
         return reservations.stream()
                 .map(reservation -> modelMapper.map(reservation, ReservationDetailsDTO.class))
                 .toList();
+    }
+
+    private AvailabilityCheckResponseDto checkAccommodationAvailability(CreateReservationDto createReservationDto) {
+        AccommodationCheckDto accommodationCheckDto = AccommodationCheckDto.builder()
+                .startDate(createReservationDto.getStartDate())
+                .endDate(createReservationDto.getEndDate())
+                .numberOfGuests(createReservationDto.getNumberOfGuests())
+                .build();
+
+        return accommodationFeignClient.checkAccommodationAvailability(
+                createReservationDto.getAccommodationId(), accommodationCheckDto);
     }
 }
