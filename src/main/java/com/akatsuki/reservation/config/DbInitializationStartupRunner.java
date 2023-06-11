@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.UUID;
 
 @Component
 @RequiredArgsConstructor
@@ -20,6 +21,7 @@ public class DbInitializationStartupRunner implements ApplicationRunner {
     @Override
     public void run(ApplicationArguments args) {
         var r1 = Reservation.builder()
+                .id(UUID.randomUUID().toString())
                 .accommodationId(1L)
                 .startDate(LocalDate.of(2023, 5, 10))
                 .endDate(LocalDate.of(2023, 5, 15))
@@ -27,6 +29,7 @@ public class DbInitializationStartupRunner implements ApplicationRunner {
                 .numberOfGuests(3)
                 .build();
         var r2 = Reservation.builder()
+                .id(UUID.randomUUID().toString())
                 .accommodationId(1L)
                 .startDate(LocalDate.of(2023, 5, 10))
                 .endDate(LocalDate.of(2023, 5, 15))
@@ -34,6 +37,7 @@ public class DbInitializationStartupRunner implements ApplicationRunner {
                 .numberOfGuests(4)
                 .build();
         var r3 = Reservation.builder()
+                .id(UUID.randomUUID().toString())
                 .accommodationId(2L)
                 .startDate(LocalDate.of(2023, 6, 5))
                 .endDate(LocalDate.of(2023, 6, 15))

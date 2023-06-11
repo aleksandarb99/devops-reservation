@@ -2,13 +2,13 @@ package com.akatsuki.reservation.repository;
 
 import com.akatsuki.reservation.enums.ReservationStatus;
 import com.akatsuki.reservation.model.Reservation;
-import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
 @Repository
-public interface ReservationRepository extends JpaRepository<Reservation, Long> {
+public interface ReservationRepository extends MongoRepository<Reservation, String> {
 
     List<Reservation> findAllByUserId(Long userId);
 

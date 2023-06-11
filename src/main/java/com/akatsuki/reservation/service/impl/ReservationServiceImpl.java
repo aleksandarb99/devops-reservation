@@ -25,6 +25,11 @@ public class ReservationServiceImpl implements ReservationService {
     private final AccommodationFeignClient accommodationFeignClient;
 
     @Override
+    public List<Reservation> getAllReservations() {
+        return reservationRepository.findAll();
+    }
+
+    @Override
     public void createReservation(CreateReservationDto createReservationDto) {
         AvailabilityCheckResponseDto availabilityCheckResponseDto = checkAccommodationAvailability(createReservationDto);
         // Check if accommodation is available for chosen dates
@@ -58,7 +63,7 @@ public class ReservationServiceImpl implements ReservationService {
     }
 
     @Override
-    public void cancelReservation(Long reservationId) {
+    public void cancelReservation(String reservationId) {
         Reservation reservation = reservationRepository.findById(reservationId)
                 .orElseThrow(() -> new BadRequestException("There's no such reservation present with given id " + reservationId));
 
@@ -107,7 +112,7 @@ public class ReservationServiceImpl implements ReservationService {
     }
 
     @Override
-    public void denyReservation(Long reservationId) {
+    public void denyReservation(String reservationId) {
         Reservation reservation = reservationRepository.findById(reservationId)
                 .orElseThrow(() -> new BadRequestException("There's no such reservation present with given id " + reservationId));
 
@@ -120,7 +125,7 @@ public class ReservationServiceImpl implements ReservationService {
     }
 
     @Override
-    public void approveReservation(Long reservationId) {
+    public void approveReservation(String reservationId) {
         Reservation reservation = reservationRepository.findById(reservationId)
                 .orElseThrow(() -> new BadRequestException("There's no such reservation present with given id " + reservationId));
 

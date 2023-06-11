@@ -4,6 +4,7 @@ import com.akatsuki.reservation.dto.AccommodationInfoDTO;
 import com.akatsuki.reservation.dto.CreateReservationDto;
 import com.akatsuki.reservation.dto.ReservationDetailsDTO;
 import com.akatsuki.reservation.enums.ReservationStatus;
+import com.akatsuki.reservation.model.Reservation;
 import com.akatsuki.reservation.service.ReservationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -17,6 +18,12 @@ import java.util.List;
 public class ReservationController {
     private final ReservationService reservationService;
 
+    @GetMapping
+    @ResponseStatus(HttpStatus.OK)
+    public List<Reservation> getAllReservations() {
+        return reservationService.getAllReservations();
+    }
+
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public void createReservation(@RequestBody CreateReservationDto createReservationDto) { // TODO Add @Valid if DTO is validated
@@ -25,7 +32,7 @@ public class ReservationController {
 
     @PutMapping("/cancel/{reservationId}")
     @ResponseStatus(HttpStatus.OK)
-    public void cancelReservation(@PathVariable("reservationId") Long reservationId) {
+    public void cancelReservation(@PathVariable("reservationId") String reservationId) {
         reservationService.cancelReservation(reservationId);
     }
 
@@ -46,13 +53,13 @@ public class ReservationController {
 
     @PutMapping("/deny/{reservationId}")
     @ResponseStatus(HttpStatus.OK)
-    public void denyReservationRequest(@PathVariable("reservationId") Long reservationId) {
+    public void denyReservationRequest(@PathVariable("reservationId") String reservationId) {
         reservationService.denyReservation(reservationId);
     }
 
     @PutMapping("/approve/{reservationId}")
     @ResponseStatus(HttpStatus.OK)
-    public void approveReservationRequest(@PathVariable("reservationId") Long reservationId) {
+    public void approveReservationRequest(@PathVariable("reservationId") String reservationId) {
         reservationService.approveReservation(reservationId);
     }
 

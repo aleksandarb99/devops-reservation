@@ -6,15 +6,15 @@ import com.akatsuki.reservation.repository.ReservationRepository;
 import com.akatsuki.reservation.service.ReservationService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
-import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.containers.MongoDBContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
+import java.util.List;
 import java.util.Optional;
 
 @SpringBootTest
@@ -22,13 +22,11 @@ import java.util.Optional;
 class ReservationServiceIntegrationTest {
 
     @Container
-    static PostgreSQLContainer<?> db = new PostgreSQLContainer<>("postgres:latest");
+    static MongoDBContainer db = new MongoDBContainer("mongo:latest");
 
     @DynamicPropertySource
-    static void postgresProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url", db::getJdbcUrl);
-        registry.add("spring.datasource.username", db::getUsername);
-        registry.add("spring.datasource.password", db::getPassword);
+    static void mongoProperties(DynamicPropertyRegistry registry) {
+        registry.add("spring.data.mongodb.uri", db::getReplicaSetUrl);
     }
 
     @Autowired
@@ -39,8 +37,12 @@ class ReservationServiceIntegrationTest {
 
     @Test
     void denyReservationTest() {
-        reservationService.denyReservation(1L);
-        Optional<Reservation> reservationOptional = reservationRepository.findById(1L);
+        List<Reservation> reservationList = reservationRepository.findAll().stream().filter(
+                r -> r.getStatus().equals(ReservationStatus.REQUESTED)).toList();
+        String id = reservationList.get(0).getId();
+
+        reservationService.denyReservation(id);
+        Optional<Reservation> reservationOptional = reservationRepository.findById(id);
         Assertions.assertTrue(reservationOptional.isPresent());
         Reservation reservation = reservationOptional.get();
         Assertions.assertEquals(ReservationStatus.CANCELLED, reservation.getStatus());
