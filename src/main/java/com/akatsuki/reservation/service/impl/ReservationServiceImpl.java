@@ -4,6 +4,7 @@ import com.akatsuki.reservation.dto.*;
 import com.akatsuki.reservation.enums.ReservationStatus;
 import com.akatsuki.reservation.exception.BadRequestException;
 import com.akatsuki.reservation.feignclients.AccommodationFeignClient;
+import com.akatsuki.reservation.feignclients.UserFeignClient;
 import com.akatsuki.reservation.model.Reservation;
 import com.akatsuki.reservation.repository.ReservationRepository;
 import com.akatsuki.reservation.service.ReservationService;
@@ -23,6 +24,7 @@ public class ReservationServiceImpl implements ReservationService {
     private final ModelMapper modelMapper;
 
     private final AccommodationFeignClient accommodationFeignClient;
+    private final UserFeignClient userFeignClient;
 
     @Override
     public List<Reservation> getAllReservations() {
@@ -77,7 +79,7 @@ public class ReservationServiceImpl implements ReservationService {
         reservation.setStatus(ReservationStatus.CANCELLED);
         reservationRepository.save(reservation);
 
-        // TODO Call auth service to increase number of cancelled reservations by 1
+        userFeignClient.addCancellation(reservation.getUserId());
     }
 
     @Override
