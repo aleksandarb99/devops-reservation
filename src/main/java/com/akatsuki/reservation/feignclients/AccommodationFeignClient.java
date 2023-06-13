@@ -17,7 +17,6 @@ public interface AccommodationFeignClient {
     @PostMapping("/{id}/check-availability")
     AvailabilityCheckResponseDto checkAccommodationAvailability(@PathVariable Long id, @RequestBody AccommodationCheckDto accommodationCheckDto);
 
-    //    TODO: Use this
     @GetMapping("/per-host/{id}")
     List<AccommodationBasicsDto> findPerHostAccommodations(@PathVariable Long id);
 }

@@ -24,4 +24,8 @@ public interface ReservationService {
     void denyReservation(String reservationId);
 
     void approveReservation(String reservationId);
+
+    boolean checkIfHostCanBeDeleted(Long hostId);
+
+    boolean checkIfGuestCanBeDeleted(Long guestId);
 }
