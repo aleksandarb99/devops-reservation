@@ -68,4 +68,16 @@ public class ReservationController {
     public boolean checkReservationsOfAccommodation(@RequestBody AccommodationInfoDTO accommodationInfoDTO) {
         return reservationService.checkReservationsOfAccommodation(accommodationInfoDTO);
     }
+
+    @GetMapping("/check-host-reservations/{hostId}")
+    @ResponseStatus(HttpStatus.OK)
+    public boolean checkIfHostCanBeDeleted(@PathVariable("hostId") Long hostId) {   // TODO Take it from token
+        return reservationService.checkIfHostCanBeDeleted(hostId);
+    }
+
+    @GetMapping("/check-guest-reservations/{guestId}")
+    @ResponseStatus(HttpStatus.OK)
+    public boolean checkIfGuestCanBeDeleted(@PathVariable("guestId") Long guestId) {   // TODO Take it from token
+        return reservationService.checkIfGuestCanBeDeleted(guestId);
+    }
 }

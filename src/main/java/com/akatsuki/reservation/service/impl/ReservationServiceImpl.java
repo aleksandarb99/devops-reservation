@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
@@ -167,6 +168,29 @@ public class ReservationServiceImpl implements ReservationService {
         }
 
         return true;
+    }
+
+    @Override
+    public boolean checkIfHostCanBeDeleted(Long hostId) {
+        // TODO Check if we need to return whole new DTO, all we need is collection of accommodation ids
+        List<AccommodationBasicsDto> hostAccommodations = accommodationFeignClient.findPerHostAccommodations(hostId);
+
+        for (AccommodationBasicsDto accommodationBasicDto: hostAccommodations) {
+            List<Reservation> reservations = reservationRepository.findAllByAccommodationIdAndStatusAndStartDateAfter(
+                    accommodationBasicDto.getId(), ReservationStatus.APPROVED, LocalDate.now());
+            if (reservations.size() > 0) {
+                return false;
+            }
+        }
+        
+        return true;
+    }
+
+    @Override
+    public boolean checkIfGuestCanBeDeleted(Long guestId) {
+        List<Reservation> reservations = reservationRepository.findAllByUserIdAndStatusAndStartDateAfter(
+                guestId, ReservationStatus.APPROVED, LocalDate.now());
+        return reservations.size() == 0;
     }
 
     private List<ReservationDetailsDTO> mapToDtosAndAttachUsers(List<Reservation> reservations, Map<Long, UserDetailsDTO> userDetailsDTOMap) {
