@@ -33,8 +33,8 @@ public class ReservationServiceImpl implements ReservationService {
     }
 
     @Override
-    public void createReservation(CreateReservationDto createReservationDto) {
-        AvailabilityCheckResponseDto availabilityCheckResponseDto = checkAccommodationAvailability(createReservationDto);
+    public void createReservation(CreateReservationDto createReservationDto, String token) {
+        AvailabilityCheckResponseDto availabilityCheckResponseDto = checkAccommodationAvailability(createReservationDto, token);
         // Check if accommodation is available for chosen dates
         if (!availabilityCheckResponseDto.isAvailable()) {
             throw new BadRequestException("It is not possible to create reservation for requested accommodation and date!");
@@ -66,7 +66,7 @@ public class ReservationServiceImpl implements ReservationService {
     }
 
     @Override
-    public void cancelReservation(String reservationId) {
+    public void cancelReservation(String reservationId, String token) {
         Reservation reservation = reservationRepository.findById(reservationId)
                 .orElseThrow(() -> new BadRequestException("There's no such reservation present with given id " + reservationId));
 
@@ -80,7 +80,7 @@ public class ReservationServiceImpl implements ReservationService {
         reservation.setStatus(ReservationStatus.CANCELLED);
         reservationRepository.save(reservation);
 
-        userFeignClient.addCancellation(reservation.getUserId());
+        userFeignClient.addCancellation(token, reservation.getUserId());
     }
 
     @Override
@@ -171,18 +171,18 @@ public class ReservationServiceImpl implements ReservationService {
     }
 
     @Override
-    public boolean checkIfHostCanBeDeleted(Long hostId) {
+    public boolean checkIfHostCanBeDeleted(String token) {
         // TODO Check if we need to return whole new DTO, all we need is collection of accommodation ids
-        List<AccommodationBasicsDto> hostAccommodations = accommodationFeignClient.findPerHostAccommodations(hostId);
+        List<AccommodationBasicsDto> hostAccommodations = accommodationFeignClient.findPerHostAccommodations(token);
 
-        for (AccommodationBasicsDto accommodationBasicDto: hostAccommodations) {
+        for (AccommodationBasicsDto accommodationBasicDto : hostAccommodations) {
             List<Reservation> reservations = reservationRepository.findAllByAccommodationIdAndStatusAndStartDateAfter(
                     accommodationBasicDto.getId(), ReservationStatus.APPROVED, LocalDate.now());
             if (reservations.size() > 0) {
                 return false;
             }
         }
-        
+
         return true;
     }
 
@@ -207,14 +207,14 @@ public class ReservationServiceImpl implements ReservationService {
                 .toList();
     }
 
-    private AvailabilityCheckResponseDto checkAccommodationAvailability(CreateReservationDto createReservationDto) {
+    private AvailabilityCheckResponseDto checkAccommodationAvailability(CreateReservationDto createReservationDto, String token) {
         AccommodationCheckDto accommodationCheckDto = AccommodationCheckDto.builder()
                 .startDate(createReservationDto.getStartDate())
                 .endDate(createReservationDto.getEndDate())
                 .numberOfGuests(createReservationDto.getNumberOfGuests())
                 .build();
 
-        return accommodationFeignClient.checkAccommodationAvailability(
+        return accommodationFeignClient.checkAccommodationAvailability(token,
                 createReservationDto.getAccommodationId(), accommodationCheckDto);
     }
 }

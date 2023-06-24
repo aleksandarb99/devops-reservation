@@ -37,10 +37,10 @@ public class ReservationServiceTest {
         Reservation reservation = new Reservation();
 
         when(modelMapperMock.map(any(CreateReservationDto.class), eq(Reservation.class))).thenReturn(reservation);
-        when(accommodationFeignClientMock.checkAccommodationAvailability(any(), any())).thenReturn(availabilityCheckResponseDto);
+        when(accommodationFeignClientMock.checkAccommodationAvailability(any(), any(), any())).thenReturn(availabilityCheckResponseDto);
 
         // When
-        reservationService.createReservation(reservationDto);
+        reservationService.createReservation(reservationDto, "token");
 
         // Then
         verify(reservationRepositoryMock, times(1)).save(any(Reservation.class));

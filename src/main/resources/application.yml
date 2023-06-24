@@ -1,0 +1,17 @@
+#server:
+#  port: 8081
+spring:
+  data:
+    mongodb:
+      #      uri: mongodb+srv://admin:admin@cluster0.irgdl.mongodb.net/reservation-db?retryWrites=true&w=majority
+      uri: mongodb://${DATABASE_DOMAIN:localhost}:${DATABASE_PORT:27017}/${DATABASE_SCHEMA:reservation-db}
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          #          issuer-uri: http://127.0.0.1:9000
+          issuer-uri: ${AUTH_URL:http://localhost:9000}
+core:
+  services:
+    accommodation-url: ${ACCOMMODATION_URL:http://localhost:8080/api/v1/accommodation}
+    user-url: ${USER_URL:http://localhost:8080/api/v1/user}

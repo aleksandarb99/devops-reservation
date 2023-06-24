@@ -4,10 +4,7 @@ import com.akatsuki.reservation.dto.AccommodationBasicsDto;
 import com.akatsuki.reservation.dto.AccommodationCheckDto;
 import com.akatsuki.reservation.dto.AvailabilityCheckResponseDto;
 import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -15,8 +12,8 @@ import java.util.List;
 public interface AccommodationFeignClient {
 
     @PostMapping("/{id}/check-availability")
-    AvailabilityCheckResponseDto checkAccommodationAvailability(@PathVariable Long id, @RequestBody AccommodationCheckDto accommodationCheckDto);
+    AvailabilityCheckResponseDto checkAccommodationAvailability(@RequestHeader("Authorization") final String token, @PathVariable Long id, @RequestBody AccommodationCheckDto accommodationCheckDto);
 
-    @GetMapping("/per-host/{id}")
-    List<AccommodationBasicsDto> findPerHostAccommodations(@PathVariable Long id);
+    @GetMapping("/per-host")
+    List<AccommodationBasicsDto> findPerHostAccommodations(@RequestHeader("Authorization") final String token);
 }
