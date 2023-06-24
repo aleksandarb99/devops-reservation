@@ -26,6 +26,7 @@ public class ResourceServerConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests(authorize -> authorize
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/reservation").hasRole(guestRole)
                         .requestMatchers(HttpMethod.PUT, "/api/v1/reservation/cancel/{reservationId}").hasRole(guestRole)
                         .requestMatchers(HttpMethod.GET, "/api/v1/reservation/by-user-and-status").hasRole(guestRole)
