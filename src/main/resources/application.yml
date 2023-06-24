@@ -15,3 +15,7 @@ core:
   services:
     accommodation-url: ${ACCOMMODATION_URL:http://localhost:8080/api/v1/accommodation}
     user-url: ${USER_URL:http://localhost:8080/api/v1/user}
+frontend:
+  base: http://localhost:4200
+api-gw:
+  base: http://localhost:4000
