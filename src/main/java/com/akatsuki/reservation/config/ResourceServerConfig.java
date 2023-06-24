@@ -15,11 +15,16 @@ import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
 @EnableWebSecurity
-@Profile(value = "!test")
 public class ResourceServerConfig {
 
     @Value("${spring.security.oauth2.resourceserver.jwt.issuer-uri}")
     private String issuer;
+
+    @Bean
+    @Profile("test")
+    public JwtDecoder jwtDecoder2() {
+        return null;
+    }
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
