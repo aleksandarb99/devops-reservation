@@ -19,18 +19,21 @@ public class ResourceServerConfig {
     @Value("${spring.security.oauth2.resourceserver.jwt.issuer-uri}")
     private String issuer;
 
+    private final String guestRole = "GUEST";
+    private final String hostRole = "HOST";
+
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers(HttpMethod.POST, "/api/v1/reservation").hasRole("GUEST")
-                        .requestMatchers(HttpMethod.PUT, "/api/v1/reservation/cancel/{reservationId}").hasRole("GUEST")
-                        .requestMatchers(HttpMethod.GET, "/api/v1/reservation/by-user-and-status").hasRole("GUEST")
-                        .requestMatchers(HttpMethod.PUT, "/api/v1/reservation/deny/{reservationId}").hasRole("HOST")
-                        .requestMatchers(HttpMethod.PUT, "/api/v1/reservation/approve/{reservationId}").hasRole("HOST")
-                        .requestMatchers(HttpMethod.GET, "/api/v1/reservation/check-reservations-of-accommodation").hasRole("HOST")
-                        .requestMatchers(HttpMethod.GET, "/api/v1/reservation/check-host-reservations").hasRole("HOST")
-                        .requestMatchers(HttpMethod.GET, "/api/v1/reservation/check-guest-reservations").hasRole("GUEST")
+                        .requestMatchers(HttpMethod.POST, "/api/v1/reservation").hasRole(guestRole)
+                        .requestMatchers(HttpMethod.PUT, "/api/v1/reservation/cancel/{reservationId}").hasRole(guestRole)
+                        .requestMatchers(HttpMethod.GET, "/api/v1/reservation/by-user-and-status").hasRole(guestRole)
+                        .requestMatchers(HttpMethod.PUT, "/api/v1/reservation/deny/{reservationId}").hasRole(hostRole)
+                        .requestMatchers(HttpMethod.PUT, "/api/v1/reservation/approve/{reservationId}").hasRole(hostRole)
+                        .requestMatchers(HttpMethod.GET, "/api/v1/reservation/check-reservations-of-accommodation").hasRole(hostRole)
+                        .requestMatchers(HttpMethod.GET, "/api/v1/reservation/check-host-reservations").hasRole(hostRole)
+                        .requestMatchers(HttpMethod.GET, "/api/v1/reservation/check-guest-reservations").hasRole(guestRole)
                         .anyRequest().authenticated()
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2
