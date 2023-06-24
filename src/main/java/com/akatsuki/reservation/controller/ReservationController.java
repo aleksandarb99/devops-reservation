@@ -4,10 +4,10 @@ import com.akatsuki.reservation.dto.AccommodationInfoDTO;
 import com.akatsuki.reservation.dto.CreateReservationDto;
 import com.akatsuki.reservation.dto.ReservationDetailsDTO;
 import com.akatsuki.reservation.enums.ReservationStatus;
-import com.akatsuki.reservation.model.Reservation;
 import com.akatsuki.reservation.service.ReservationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -17,37 +17,40 @@ import java.util.List;
 @RequestMapping("api/v1/reservation")
 public class ReservationController {
     private final ReservationService reservationService;
+    private final JwtDecoder jwtDecoder;
 
-    @GetMapping
-    @ResponseStatus(HttpStatus.OK)
-    public List<Reservation> getAllReservations() {
-        return reservationService.getAllReservations();
-    }
+//    @GetMapping
+//    @ResponseStatus(HttpStatus.OK)
+//    public List<Reservation> getAllReservations() {
+//        return reservationService.getAllReservations();
+//    }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public void createReservation(@RequestBody CreateReservationDto createReservationDto) { // TODO Add @Valid if DTO is validated
-        reservationService.createReservation(createReservationDto);
+    public void createReservation(@RequestBody CreateReservationDto createReservationDto, @RequestHeader("Authorization") final String token) { // TODO Add @Valid if DTO is validated
+        reservationService.createReservation(createReservationDto, token);
     }
 
     @PutMapping("/cancel/{reservationId}")
     @ResponseStatus(HttpStatus.OK)
-    public void cancelReservation(@PathVariable("reservationId") String reservationId) {
-        reservationService.cancelReservation(reservationId);
+    public void cancelReservation(@PathVariable("reservationId") String reservationId, @RequestHeader("Authorization") final String token) {
+        reservationService.cancelReservation(reservationId, token);
     }
 
-    @GetMapping("/by-user-and-status/{userId}")
+    @GetMapping("/by-user-and-status")
     @ResponseStatus(HttpStatus.OK)
     public List<ReservationDetailsDTO> getReservations(@RequestParam(name = "status", required = false) ReservationStatus status,
-                                                       @PathVariable("userId") Long userId) {    // TODO Take it from token
-        return reservationService.getReservations(status, userId);
+                                                       @RequestHeader("Authorization") final String token) {
+        Long hostId = getIdFromToken(token);
+        return reservationService.getReservations(status, hostId);
     }
 
+    //    TODO: Who call this? Check this
     // TODO Check this one, once you integrate with Auth
     @GetMapping("/by-accommodation-and-status/{accommodationId}")
     @ResponseStatus(HttpStatus.OK)
     public List<ReservationDetailsDTO> getReservationsByAccommodation(@RequestParam(name = "status", required = false) ReservationStatus status,
-                                                       @PathVariable("accommodationId") Long accommodationId) {
+                                                                      @PathVariable("accommodationId") Long accommodationId) {
         return reservationService.getReservationsByAccommodation(status, accommodationId);
     }
 
@@ -69,15 +72,21 @@ public class ReservationController {
         return reservationService.checkReservationsOfAccommodation(accommodationInfoDTO);
     }
 
-    @GetMapping("/check-host-reservations/{hostId}")
+    @GetMapping("/check-host-reservations")
     @ResponseStatus(HttpStatus.OK)
-    public boolean checkIfHostCanBeDeleted(@PathVariable("hostId") Long hostId) {   // TODO Take it from token
-        return reservationService.checkIfHostCanBeDeleted(hostId);
+    public boolean checkIfHostCanBeDeleted(@RequestHeader("Authorization") final String token) {
+        return reservationService.checkIfHostCanBeDeleted(token);
     }
 
-    @GetMapping("/check-guest-reservations/{guestId}")
+    @GetMapping("/check-guest-reservations")
     @ResponseStatus(HttpStatus.OK)
-    public boolean checkIfGuestCanBeDeleted(@PathVariable("guestId") Long guestId) {   // TODO Take it from token
+    public boolean checkIfGuestCanBeDeleted(@RequestHeader("Authorization") final String token) {
+        Long guestId = getIdFromToken(token);
         return reservationService.checkIfGuestCanBeDeleted(guestId);
     }
+
+    private Long getIdFromToken(String token) {
+        return (Long) jwtDecoder.decode(token.split(" ")[1]).getClaims().get("id");
+    }
+
 }
