@@ -45,6 +45,14 @@ public class ReservationController {
         return reservationService.getReservations(status, hostId);
     }
 
+    @GetMapping("/by-guest-and-status")
+    @ResponseStatus(HttpStatus.OK)
+    public List<ReservationDetailsDTO> getReservationsByGuest(@RequestParam(name = "status", required = false) ReservationStatus status,
+                                                       @RequestHeader("Authorization") final String token) {
+        Long guestOId = getIdFromToken(token);
+        return reservationService.getReservationsByGuest(status, guestOId);
+    }
+
     //    TODO: Who call this? Check this
     // TODO Check this one, once you integrate with Auth
     @GetMapping("/by-accommodation-and-status/{accommodationId}")

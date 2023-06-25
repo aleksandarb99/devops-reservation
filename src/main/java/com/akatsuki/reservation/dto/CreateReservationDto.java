@@ -13,6 +13,7 @@ import java.time.LocalDate;
 @AllArgsConstructor
 public class CreateReservationDto {
     private Long accommodationId;
+    private Long guestId;
     private LocalDate startDate;
     private LocalDate endDate;
     private int numberOfGuests;

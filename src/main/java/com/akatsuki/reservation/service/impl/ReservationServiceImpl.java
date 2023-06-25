@@ -95,6 +95,17 @@ public class ReservationServiceImpl implements ReservationService {
     }
 
     @Override
+    public List<ReservationDetailsDTO> getReservationsByGuest(ReservationStatus status, Long guestId) {
+        if (status == null) {
+            List<Reservation> reservations = reservationRepository.findAllByGuestId(guestId);
+            return mapToDtos(reservations);
+        }
+
+        List<Reservation> reservations = reservationRepository.findAllByUserIdAndStatus(guestId, status);
+        return mapToDtos(reservations);
+    }
+
+    @Override
     public List<ReservationDetailsDTO> getReservationsByAccommodation(ReservationStatus status, Long accommodationId) {
         List<Reservation> reservations;
         if (status == null) {

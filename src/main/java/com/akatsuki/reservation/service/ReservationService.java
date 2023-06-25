@@ -12,6 +12,8 @@ public interface ReservationService {
     List<Reservation> getAllReservations();
 
     List<ReservationDetailsDTO> getReservations(ReservationStatus status, Long userId);
+    List<ReservationDetailsDTO> getReservationsByGuest(ReservationStatus status, Long guestId);
+
 
     List<ReservationDetailsDTO> getReservationsByAccommodation(ReservationStatus status, Long accommodationId);
 

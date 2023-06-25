@@ -12,6 +12,8 @@ import java.util.List;
 public interface ReservationRepository extends MongoRepository<Reservation, String> {
 
     List<Reservation> findAllByUserId(Long userId);
+    List<Reservation> findAllByGuestId(Long guestId);
+
 
     List<Reservation> findAllByUserIdAndStatus(Long userId, ReservationStatus status);
     List<Reservation> findAllByUserIdAndStatusAndStartDateAfter(Long userId, ReservationStatus status, LocalDate currentDate);
