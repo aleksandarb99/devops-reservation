@@ -40,7 +40,7 @@ public class ReservationServiceTest {
         when(accommodationFeignClientMock.checkAccommodationAvailability(any(), any(), any())).thenReturn(availabilityCheckResponseDto);
 
         // When
-        reservationService.createReservation(reservationDto, "token");
+        reservationService.createReservation(reservationDto, "token", 1L);
 
         // Then
         verify(reservationRepositoryMock, times(1)).save(any(Reservation.class));

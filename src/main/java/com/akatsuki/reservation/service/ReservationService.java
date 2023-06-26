@@ -19,7 +19,7 @@ public interface ReservationService {
 
     boolean checkReservationsOfAccommodation(AccommodationInfoDTO accommodationInfoDTO);
 
-    void createReservation(CreateReservationDto reservationDto, String token);
+    void createReservation(CreateReservationDto reservationDto, String token, Long guestId);
 
     void cancelReservation(String reservationId, String token);
 

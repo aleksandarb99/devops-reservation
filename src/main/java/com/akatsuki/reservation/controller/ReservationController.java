@@ -28,7 +28,8 @@ public class ReservationController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public void createReservation(@RequestBody CreateReservationDto createReservationDto, @RequestHeader("Authorization") final String token) { // TODO Add @Valid if DTO is validated
-        reservationService.createReservation(createReservationDto, token);
+        Long guestId = getIdFromToken(token);
+        reservationService.createReservation(createReservationDto, token, guestId);
     }
 
     @PutMapping("/cancel/{reservationId}")
@@ -49,8 +50,8 @@ public class ReservationController {
     @ResponseStatus(HttpStatus.OK)
     public List<ReservationDetailsDTO> getReservationsByGuest(@RequestParam(name = "status", required = false) ReservationStatus status,
                                                        @RequestHeader("Authorization") final String token) {
-        Long guestOId = getIdFromToken(token);
-        return reservationService.getReservationsByGuest(status, guestOId);
+        Long guestId = getIdFromToken(token);
+        return reservationService.getReservationsByGuest(status, guestId);
     }
 
     //    TODO: Who call this? Check this
