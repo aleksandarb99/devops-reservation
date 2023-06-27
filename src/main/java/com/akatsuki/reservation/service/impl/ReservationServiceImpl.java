@@ -13,8 +13,6 @@ import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 @Service
@@ -33,14 +31,14 @@ public class ReservationServiceImpl implements ReservationService {
     }
 
     @Override
-    public void createReservation(CreateReservationDto createReservationDto, String token, Long guestId) {
+    public void createReservation(CreateReservationDto createReservationDto, Long guestId, String token) {
+
         AvailabilityCheckResponseDto availabilityCheckResponseDto = checkAccommodationAvailability(createReservationDto, token);
-        // Check if accommodation is available for chosen dates
+
         if (!availabilityCheckResponseDto.isAvailable()) {
             throw new BadRequestException("It is not possible to create reservation for requested accommodation and date!");
         }
 
-        // Fetch reservations for chosen accommodation
         List<Reservation> approvedReservations = reservationRepository.findAllByAccommodationIdAndStatus(
                 createReservationDto.getAccommodationId(), ReservationStatus.APPROVED);
 
@@ -54,15 +52,15 @@ public class ReservationServiceImpl implements ReservationService {
         }
 
         Reservation reservation = modelMapper.map(createReservationDto, Reservation.class);
-        reservation.setGuestId(guestId);
-        reservation.setUserId(createReservationDto.getUser());
-        // If it needs manual approval, save it as a request
+
         if (availabilityCheckResponseDto.isAutomaticApprove()) {
             reservation.setStatus(ReservationStatus.APPROVED);
         } else {
             reservation.setStatus(ReservationStatus.REQUESTED);
         }
 
+        reservation.setGuestId(guestId);
+        reservation.setHostId(availabilityCheckResponseDto.getHostId());
         reservation.setTotalPrice(availabilityCheckResponseDto.getTotalCost());
         reservationRepository.save(reservation);
     }
@@ -86,13 +84,22 @@ public class ReservationServiceImpl implements ReservationService {
     }
 
     @Override
-    public List<ReservationDetailsDTO> getReservations(ReservationStatus status, Long userId) {
+    public List<ReservationDetailsDTO> getReservations(ReservationStatus status, Long id) {
+        List<Reservation> reservations;
         if (status == null) {
-            List<Reservation> reservations = reservationRepository.findAllByUserId(userId);
+            if (status.equals(ReservationStatus.REQUESTED)) {
+                reservations = reservationRepository.findAllByHostId(id);
+            } else {
+                reservations = reservationRepository.findAllByGuestId(id);
+            }
             return mapToDtos(reservations);
         }
 
-        List<Reservation> reservations = reservationRepository.findAllByUserIdAndStatus(userId, status);
+        if (status.equals(ReservationStatus.REQUESTED)) {
+            reservations = reservationRepository.findAllByHostIdAndStatus(id, status);
+        } else {
+            reservations = reservationRepository.findAllByGuestIdAndStatus(id, status);
+        }
         return mapToDtos(reservations);
     }
 
@@ -103,9 +110,10 @@ public class ReservationServiceImpl implements ReservationService {
             return mapToDtos(reservations);
         }
 
-        List<Reservation> reservations = reservationRepository.findAllByUserIdAndStatus(guestId, status);
+        List<Reservation> reservations = reservationRepository.findAllByGuestIdAndStatus(guestId, status);
         return mapToDtos(reservations);
     }
+
 
     @Override
     public List<ReservationDetailsDTO> getReservationsByAccommodation(ReservationStatus status, Long accommodationId) {
@@ -120,7 +128,7 @@ public class ReservationServiceImpl implements ReservationService {
 
         Set<Long> userIds = new HashSet<>();
         for (Reservation reservation : reservations) {
-            userIds.add(reservation.getUserId());
+            userIds.add(reservation.getGuestId());
         }
 
         // TODO From auth service fetch details for users using userIds
@@ -128,7 +136,7 @@ public class ReservationServiceImpl implements ReservationService {
     }
 
     @Override
-    public void denyReservation(String reservationId) {
+    public void denyReservation(String reservationId, Long hostId) {
         Reservation reservation = reservationRepository.findById(reservationId)
                 .orElseThrow(() -> new BadRequestException("There's no such reservation present with given id " + reservationId));
 
@@ -136,17 +144,25 @@ public class ReservationServiceImpl implements ReservationService {
             throw new BadRequestException("Can not be denied! It is already approved!");
         }
 
+        if (!reservation.getHostId().equals(hostId)) {
+            throw new BadRequestException("Can not be denied! You are not correct host!");
+        }
+
         reservation.setStatus(ReservationStatus.CANCELLED);
         reservationRepository.save(reservation);
     }
 
     @Override
-    public void approveReservation(String reservationId) {
+    public void approveReservation(String reservationId, Long hostId) {
         Reservation reservation = reservationRepository.findById(reservationId)
                 .orElseThrow(() -> new BadRequestException("There's no such reservation present with given id " + reservationId));
 
         if (reservation.getStatus().equals(ReservationStatus.CANCELLED)) {
             throw new BadRequestException("Can not be approved! It is cancelled!");
+        }
+
+        if (!reservation.getHostId().equals(hostId)) {
+            throw new BadRequestException("Can not be denied! You are not correct host!");
         }
 
         List<Reservation> requestedReservations = reservationRepository.findAllByAccommodationIdAndStatus(
@@ -167,15 +183,15 @@ public class ReservationServiceImpl implements ReservationService {
     }
 
     @Override
-    public boolean checkReservationsOfAccommodation(AccommodationInfoDTO accommodationInfoDTO) {
+    public boolean checkReservationsOfAccommodation(Long accommodationId, LocalDate startDate, LocalDate endDate) {
         List<Reservation> reservations = reservationRepository.findAllByAccommodationIdAndStatusNot(
-                accommodationInfoDTO.getAccommodationId(), ReservationStatus.CANCELLED);
+                accommodationId, ReservationStatus.CANCELLED);
 
         for (Reservation reservation : reservations) {
-            if (reservation.getStartDate().isAfter(accommodationInfoDTO.getStartDate()) && reservation.getStartDate().isBefore(accommodationInfoDTO.getEndDate())) {
+            if (reservation.getStartDate().isAfter(startDate) && reservation.getStartDate().isBefore(endDate)) {
                 return false;
             }
-            if (accommodationInfoDTO.getStartDate().isAfter(reservation.getStartDate()) && accommodationInfoDTO.getStartDate().isBefore(reservation.getEndDate())) {
+            if (startDate.isAfter(reservation.getStartDate()) && startDate.isBefore(reservation.getEndDate())) {
                 return false;
             }
         }
@@ -201,7 +217,7 @@ public class ReservationServiceImpl implements ReservationService {
 
     @Override
     public boolean checkIfGuestCanBeDeleted(Long guestId) {
-        List<Reservation> reservations = reservationRepository.findAllByUserIdAndStatusAndStartDateAfter(
+        List<Reservation> reservations = reservationRepository.findAllByHostIdAndStatusAndStartDateAfter(
                 guestId, ReservationStatus.APPROVED, LocalDate.now());
         return reservations.size() == 0;
     }
@@ -209,7 +225,7 @@ public class ReservationServiceImpl implements ReservationService {
     private List<ReservationDetailsDTO> mapToDtosAndAttachUsers(List<Reservation> reservations, Map<Long, UserDetailsDTO> userDetailsDTOMap) {
         return reservations.stream().map(reservation -> {
             ReservationDetailsDTO reservationDetailsDTO = modelMapper.map(reservation, ReservationDetailsDTO.class);
-            reservationDetailsDTO.setUser(userDetailsDTOMap.get(reservation.getUserId()));
+            reservationDetailsDTO.setUser(userDetailsDTOMap.get(reservation.getGuestId()));
             return reservationDetailsDTO;
         }).toList();
     }

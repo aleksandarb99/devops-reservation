@@ -42,11 +42,12 @@ class ReservationServiceIntegrationTest {
 
     @Test
     void denyReservationTest() {
+        Long hostId = 1L;
         List<Reservation> reservationList = reservationRepository.findAll().stream().filter(
                 r -> r.getStatus().equals(ReservationStatus.REQUESTED)).toList();
         String id = reservationList.get(0).getId();
 
-        reservationService.denyReservation(id);
+        reservationService.denyReservation(id, hostId);
         Optional<Reservation> reservationOptional = reservationRepository.findById(id);
         Assertions.assertTrue(reservationOptional.isPresent());
         Reservation reservation = reservationOptional.get();

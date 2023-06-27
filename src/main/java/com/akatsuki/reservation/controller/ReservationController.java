@@ -1,6 +1,5 @@
 package com.akatsuki.reservation.controller;
 
-import com.akatsuki.reservation.dto.AccommodationInfoDTO;
 import com.akatsuki.reservation.dto.CreateReservationDto;
 import com.akatsuki.reservation.dto.ReservationDetailsDTO;
 import com.akatsuki.reservation.enums.ReservationStatus;
@@ -10,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -19,17 +19,25 @@ public class ReservationController {
     private final ReservationService reservationService;
     private final JwtDecoder jwtDecoder;
 
-//    @GetMapping
-//    @ResponseStatus(HttpStatus.OK)
-//    public List<Reservation> getAllReservations() {
-//        return reservationService.getAllReservations();
-//    }
+    @GetMapping("/requested")
+    @ResponseStatus(HttpStatus.OK)
+    public List<ReservationDetailsDTO> getRequestedReservations(@RequestHeader("Authorization") final String token) {
+        Long hostId = getIdFromToken(token);
+        return reservationService.getReservations(ReservationStatus.REQUESTED, hostId);
+    }
+
+    @GetMapping("/approved")
+    @ResponseStatus(HttpStatus.OK)
+    public List<ReservationDetailsDTO> getCurrentReservations(@RequestHeader("Authorization") final String token) {
+        Long guestId = getIdFromToken(token);
+        return reservationService.getReservations(ReservationStatus.APPROVED, guestId);
+    }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public void createReservation(@RequestBody CreateReservationDto createReservationDto, @RequestHeader("Authorization") final String token) { // TODO Add @Valid if DTO is validated
         Long guestId = getIdFromToken(token);
-        reservationService.createReservation(createReservationDto, token, guestId);
+        reservationService.createReservation(createReservationDto, guestId, token);
     }
 
     @PutMapping("/cancel/{reservationId}")
@@ -38,21 +46,6 @@ public class ReservationController {
         reservationService.cancelReservation(reservationId, token);
     }
 
-    @GetMapping("/by-user-and-status")
-    @ResponseStatus(HttpStatus.OK)
-    public List<ReservationDetailsDTO> getReservations(@RequestParam(name = "status", required = false) ReservationStatus status,
-                                                       @RequestHeader("Authorization") final String token) {
-        Long hostId = getIdFromToken(token);
-        return reservationService.getReservations(status, hostId);
-    }
-
-    @GetMapping("/by-guest-and-status")
-    @ResponseStatus(HttpStatus.OK)
-    public List<ReservationDetailsDTO> getReservationsByGuest(@RequestParam(name = "status", required = false) ReservationStatus status,
-                                                       @RequestHeader("Authorization") final String token) {
-        Long guestId = getIdFromToken(token);
-        return reservationService.getReservationsByGuest(status, guestId);
-    }
 
     //    TODO: Who call this? Check this
     // TODO Check this one, once you integrate with Auth
@@ -65,20 +58,24 @@ public class ReservationController {
 
     @PutMapping("/deny/{reservationId}")
     @ResponseStatus(HttpStatus.OK)
-    public void denyReservationRequest(@PathVariable("reservationId") String reservationId) {
-        reservationService.denyReservation(reservationId);
+    public void denyReservationRequest(@PathVariable("reservationId") String reservationId, @RequestHeader("Authorization") final String token) {
+        Long hostId = getIdFromToken(token);
+        reservationService.denyReservation(reservationId, hostId);
     }
 
     @PutMapping("/approve/{reservationId}")
     @ResponseStatus(HttpStatus.OK)
-    public void approveReservationRequest(@PathVariable("reservationId") String reservationId) {
-        reservationService.approveReservation(reservationId);
+    public void approveReservationRequest(@PathVariable("reservationId") String reservationId, @RequestHeader("Authorization") final String token) {
+        Long hostId = getIdFromToken(token);
+        reservationService.approveReservation(reservationId, hostId);
     }
 
     @GetMapping("/check-reservations-of-accommodation")
     @ResponseStatus(HttpStatus.OK)
-    public boolean checkReservationsOfAccommodation(@RequestBody AccommodationInfoDTO accommodationInfoDTO) {
-        return reservationService.checkReservationsOfAccommodation(accommodationInfoDTO);
+    public boolean checkReservationsOfAccommodation(@RequestParam(name = "id", required = true) Long id,
+                                                    @RequestParam(name = "startDate", required = true) LocalDate startDate,
+                                                    @RequestParam(name = "endDate", required = true) LocalDate endDate) {
+        return reservationService.checkReservationsOfAccommodation(id, startDate, endDate);
     }
 
     @GetMapping("/check-host-reservations")

@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class AvailabilityCheckResponseDto {
     private Long id;
+    private Long hostId;
     private boolean available;
     private int totalCost;
     private boolean automaticApprove;
