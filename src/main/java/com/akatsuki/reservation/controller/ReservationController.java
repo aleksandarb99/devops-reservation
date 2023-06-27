@@ -66,7 +66,7 @@ public class ReservationController {
         reservationService.approveReservation(reservationId);
     }
 
-    @GetMapping("/check-reservations-of-accommodation")
+    @PostMapping("/check-reservations-of-accommodation")
     @ResponseStatus(HttpStatus.OK)
     public boolean checkReservationsOfAccommodation(@RequestBody AccommodationInfoDTO accommodationInfoDTO) {
         return reservationService.checkReservationsOfAccommodation(accommodationInfoDTO);
