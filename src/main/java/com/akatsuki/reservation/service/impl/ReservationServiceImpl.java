@@ -13,8 +13,6 @@ import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 @Service
@@ -34,13 +32,13 @@ public class ReservationServiceImpl implements ReservationService {
 
     @Override
     public void createReservation(CreateReservationDto createReservationDto, Long guestId, String token) {
+
         AvailabilityCheckResponseDto availabilityCheckResponseDto = checkAccommodationAvailability(createReservationDto, token);
-        // Check if accommodation is available for chosen dates
+
         if (!availabilityCheckResponseDto.isAvailable()) {
             throw new BadRequestException("It is not possible to create reservation for requested accommodation and date!");
         }
 
-        // Fetch reservations for chosen accommodation
         List<Reservation> approvedReservations = reservationRepository.findAllByAccommodationIdAndStatus(
                 createReservationDto.getAccommodationId(), ReservationStatus.APPROVED);
 
@@ -54,13 +52,12 @@ public class ReservationServiceImpl implements ReservationService {
         }
 
         Reservation reservation = modelMapper.map(createReservationDto, Reservation.class);
-        // If it needs manual approval, save it as a request
+
         if (availabilityCheckResponseDto.isAutomaticApprove()) {
             reservation.setStatus(ReservationStatus.APPROVED);
         } else {
             reservation.setStatus(ReservationStatus.REQUESTED);
         }
-
 
         reservation.setGuestId(guestId);
         reservation.setHostId(availabilityCheckResponseDto.getHostId());
@@ -74,8 +71,8 @@ public class ReservationServiceImpl implements ReservationService {
                 .orElseThrow(() -> new BadRequestException("There's no such reservation present with given id " + reservationId));
 
         if (reservation.getStatus().equals(ReservationStatus.APPROVED)) {
-            long differenceInMinutes = ChronoUnit.MINUTES.between(reservation.getStartDate(), LocalDateTime.now());
-            if (differenceInMinutes > 1440) {
+
+            if (!LocalDate.now().isBefore(reservation.getStartDate())) {
                 throw new BadRequestException("All up to one day before reservation check in, you are able to cancel it!");
             }
         }
@@ -83,19 +80,40 @@ public class ReservationServiceImpl implements ReservationService {
         reservation.setStatus(ReservationStatus.CANCELLED);
         reservationRepository.save(reservation);
 
-        userFeignClient.addCancellation(token, reservation.getGuestId());
+        userFeignClient.addCancellation(token);
     }
 
     @Override
-    public List<ReservationDetailsDTO> getReservations(ReservationStatus status, Long hostId) {
+    public List<ReservationDetailsDTO> getReservations(ReservationStatus status, Long id) {
+        List<Reservation> reservations;
         if (status == null) {
-            List<Reservation> reservations = reservationRepository.findALlByHostId(hostId);
+            if (status.equals(ReservationStatus.REQUESTED)) {
+                reservations = reservationRepository.findAllByHostId(id);
+            } else {
+                reservations = reservationRepository.findAllByGuestId(id);
+            }
             return mapToDtos(reservations);
         }
 
-        List<Reservation> reservations = reservationRepository.findAllByHostIdAndStatus(hostId, status);
+        if (status.equals(ReservationStatus.REQUESTED)) {
+            reservations = reservationRepository.findAllByHostIdAndStatus(id, status);
+        } else {
+            reservations = reservationRepository.findAllByGuestIdAndStatus(id, status);
+        }
         return mapToDtos(reservations);
     }
+
+    @Override
+    public List<ReservationDetailsDTO> getReservationsByGuest(ReservationStatus status, Long guestId) {
+        if (status == null) {
+            List<Reservation> reservations = reservationRepository.findAllByGuestId(guestId);
+            return mapToDtos(reservations);
+        }
+
+        List<Reservation> reservations = reservationRepository.findAllByGuestIdAndStatus(guestId, status);
+        return mapToDtos(reservations);
+    }
+
 
     @Override
     public List<ReservationDetailsDTO> getReservationsByAccommodation(ReservationStatus status, Long accommodationId) {
@@ -165,15 +183,15 @@ public class ReservationServiceImpl implements ReservationService {
     }
 
     @Override
-    public boolean checkReservationsOfAccommodation(AccommodationInfoDTO accommodationInfoDTO) {
+    public boolean checkReservationsOfAccommodation(Long accommodationId, LocalDate startDate, LocalDate endDate) {
         List<Reservation> reservations = reservationRepository.findAllByAccommodationIdAndStatusNot(
-                accommodationInfoDTO.getAccommodationId(), ReservationStatus.CANCELLED);
+                accommodationId, ReservationStatus.CANCELLED);
 
         for (Reservation reservation : reservations) {
-            if (reservation.getStartDate().isAfter(accommodationInfoDTO.getStartDate()) && reservation.getStartDate().isBefore(accommodationInfoDTO.getEndDate())) {
+            if (reservation.getStartDate().isAfter(startDate) && reservation.getStartDate().isBefore(endDate)) {
                 return false;
             }
-            if (accommodationInfoDTO.getStartDate().isAfter(reservation.getStartDate()) && accommodationInfoDTO.getStartDate().isBefore(reservation.getEndDate())) {
+            if (startDate.isAfter(reservation.getStartDate()) && startDate.isBefore(reservation.getEndDate())) {
                 return false;
             }
         }

@@ -13,6 +13,8 @@ public interface ReservationRepository extends MongoRepository<Reservation, Stri
 
     List<Reservation> findAllByHostIdAndStatusAndStartDateAfter(Long userId, ReservationStatus status, LocalDate currentDate);
 
+    List<Reservation> findAllByGuestId(Long guestId);
+
     List<Reservation> findAllByAccommodationId(Long accommodationId);
 
     List<Reservation> findAllByAccommodationIdAndStatus(Long accommodationId, ReservationStatus status);
@@ -21,7 +23,9 @@ public interface ReservationRepository extends MongoRepository<Reservation, Stri
 
     List<Reservation> findAllByAccommodationIdAndStatusAndStartDateAfter(Long accommodationId, ReservationStatus status, LocalDate currentDate);
 
-    List<Reservation> findALlByHostId(Long hostId);
+    List<Reservation> findAllByHostId(Long hostId);
 
     List<Reservation> findAllByHostIdAndStatus(Long hostId, ReservationStatus status);
+
+    List<Reservation> findAllByGuestIdAndStatus(Long guestId, ReservationStatus status);
 }
