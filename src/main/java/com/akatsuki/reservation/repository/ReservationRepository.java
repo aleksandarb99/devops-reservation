@@ -25,7 +25,6 @@ public interface ReservationRepository extends MongoRepository<Reservation, Stri
 
     List<Reservation> findAllByHostId(Long hostId);
 
-    List<Reservation> findAllByHostIdAndStatus(Long hostId, ReservationStatus status);
+    List<Reservation> findAllByStatus(ReservationStatus status);
 
-    List<Reservation> findAllByGuestIdAndStatus(Long guestId, ReservationStatus status);
 }

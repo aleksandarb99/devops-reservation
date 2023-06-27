@@ -24,12 +24,7 @@ public class ReservationServiceImpl implements ReservationService {
 
     private final AccommodationFeignClient accommodationFeignClient;
     private final UserFeignClient userFeignClient;
-
-    @Override
-    public List<Reservation> getAllReservations() {
-        return reservationRepository.findAll();
-    }
-
+    
     @Override
     public void createReservation(CreateReservationDto createReservationDto, Long guestId, String token) {
 
@@ -95,25 +90,14 @@ public class ReservationServiceImpl implements ReservationService {
             return mapToDtos(reservations);
         }
 
+        reservations = reservationRepository.findAllByStatus(status);
         if (status.equals(ReservationStatus.REQUESTED)) {
-            reservations = reservationRepository.findAllByHostIdAndStatus(id, status);
+            reservations = reservations.stream().filter(r -> r.getHostId() == id).toList();
         } else {
-            reservations = reservationRepository.findAllByGuestIdAndStatus(id, status);
+            reservations = reservations.stream().filter(r -> r.getGuestId() == id).toList();
         }
         return mapToDtos(reservations);
     }
-
-    @Override
-    public List<ReservationDetailsDTO> getReservationsByGuest(ReservationStatus status, Long guestId) {
-        if (status == null) {
-            List<Reservation> reservations = reservationRepository.findAllByGuestId(guestId);
-            return mapToDtos(reservations);
-        }
-
-        List<Reservation> reservations = reservationRepository.findAllByGuestIdAndStatus(guestId, status);
-        return mapToDtos(reservations);
-    }
-
 
     @Override
     public List<ReservationDetailsDTO> getReservationsByAccommodation(ReservationStatus status, Long accommodationId) {
