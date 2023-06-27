@@ -19,7 +19,8 @@ public class Reservation {
     @Id
     private String id;
     private Long accommodationId;
-    private Long userId;
+    private Long guestId;
+    private Long hostId;
     private LocalDate startDate;
     private LocalDate endDate;
     private int numberOfGuests;

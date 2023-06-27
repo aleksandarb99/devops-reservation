@@ -29,7 +29,6 @@ public class ResourceServerConfig {
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/reservation").hasRole(guestRole)
                         .requestMatchers(HttpMethod.PUT, "/api/v1/reservation/cancel/{reservationId}").hasRole(guestRole)
-                        .requestMatchers(HttpMethod.GET, "/api/v1/reservation/by-user-and-status").hasRole(guestRole)
                         .requestMatchers(HttpMethod.PUT, "/api/v1/reservation/deny/{reservationId}").hasRole(hostRole)
                         .requestMatchers(HttpMethod.PUT, "/api/v1/reservation/approve/{reservationId}").hasRole(hostRole)
                         .requestMatchers(HttpMethod.GET, "/api/v1/reservation/check-reservations-of-accommodation").hasRole(hostRole)

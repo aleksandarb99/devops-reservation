@@ -31,6 +31,7 @@ public class ReservationServiceTest {
     @Test
     void createReservationTest() {
         // Given
+        Long guestId = 1L;
         CreateReservationDto reservationDto = new CreateReservationDto();
         AvailabilityCheckResponseDto availabilityCheckResponseDto = new AvailabilityCheckResponseDto();
         availabilityCheckResponseDto.setAvailable(true);
@@ -40,7 +41,7 @@ public class ReservationServiceTest {
         when(accommodationFeignClientMock.checkAccommodationAvailability(any(), any(), any())).thenReturn(availabilityCheckResponseDto);
 
         // When
-        reservationService.createReservation(reservationDto, "token");
+        reservationService.createReservation(reservationDto, guestId, "token");
 
         // Then
         verify(reservationRepositoryMock, times(1)).save(any(Reservation.class));

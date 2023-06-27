@@ -17,13 +17,13 @@ public interface ReservationService {
 
     boolean checkReservationsOfAccommodation(AccommodationInfoDTO accommodationInfoDTO);
 
-    void createReservation(CreateReservationDto reservationDto, String token);
+    void createReservation(CreateReservationDto reservationDto, Long guestId, String token);
 
     void cancelReservation(String reservationId, String token);
 
-    void denyReservation(String reservationId);
+    void denyReservation(String reservationId, Long hostId);
 
-    void approveReservation(String reservationId);
+    void approveReservation(String reservationId, Long hostId);
 
     boolean checkIfHostCanBeDeleted(String token);
 

@@ -33,7 +33,7 @@ public class ReservationServiceImpl implements ReservationService {
     }
 
     @Override
-    public void createReservation(CreateReservationDto createReservationDto, String token) {
+    public void createReservation(CreateReservationDto createReservationDto, Long guestId, String token) {
         AvailabilityCheckResponseDto availabilityCheckResponseDto = checkAccommodationAvailability(createReservationDto, token);
         // Check if accommodation is available for chosen dates
         if (!availabilityCheckResponseDto.isAvailable()) {
@@ -61,6 +61,9 @@ public class ReservationServiceImpl implements ReservationService {
             reservation.setStatus(ReservationStatus.REQUESTED);
         }
 
+
+        reservation.setGuestId(guestId);
+        reservation.setHostId(availabilityCheckResponseDto.getHostId());
         reservation.setTotalPrice(availabilityCheckResponseDto.getTotalCost());
         reservationRepository.save(reservation);
     }
@@ -80,17 +83,17 @@ public class ReservationServiceImpl implements ReservationService {
         reservation.setStatus(ReservationStatus.CANCELLED);
         reservationRepository.save(reservation);
 
-        userFeignClient.addCancellation(token, reservation.getUserId());
+        userFeignClient.addCancellation(token, reservation.getGuestId());
     }
 
     @Override
-    public List<ReservationDetailsDTO> getReservations(ReservationStatus status, Long userId) {
+    public List<ReservationDetailsDTO> getReservations(ReservationStatus status, Long hostId) {
         if (status == null) {
-            List<Reservation> reservations = reservationRepository.findAllByUserId(userId);
+            List<Reservation> reservations = reservationRepository.findALlByHostId(hostId);
             return mapToDtos(reservations);
         }
 
-        List<Reservation> reservations = reservationRepository.findAllByUserIdAndStatus(userId, status);
+        List<Reservation> reservations = reservationRepository.findAllByHostIdAndStatus(hostId, status);
         return mapToDtos(reservations);
     }
 
@@ -107,7 +110,7 @@ public class ReservationServiceImpl implements ReservationService {
 
         Set<Long> userIds = new HashSet<>();
         for (Reservation reservation : reservations) {
-            userIds.add(reservation.getUserId());
+            userIds.add(reservation.getGuestId());
         }
 
         // TODO From auth service fetch details for users using userIds
@@ -115,7 +118,7 @@ public class ReservationServiceImpl implements ReservationService {
     }
 
     @Override
-    public void denyReservation(String reservationId) {
+    public void denyReservation(String reservationId, Long hostId) {
         Reservation reservation = reservationRepository.findById(reservationId)
                 .orElseThrow(() -> new BadRequestException("There's no such reservation present with given id " + reservationId));
 
@@ -123,17 +126,25 @@ public class ReservationServiceImpl implements ReservationService {
             throw new BadRequestException("Can not be denied! It is already approved!");
         }
 
+        if (!reservation.getHostId().equals(hostId)) {
+            throw new BadRequestException("Can not be denied! You are not correct host!");
+        }
+
         reservation.setStatus(ReservationStatus.CANCELLED);
         reservationRepository.save(reservation);
     }
 
     @Override
-    public void approveReservation(String reservationId) {
+    public void approveReservation(String reservationId, Long hostId) {
         Reservation reservation = reservationRepository.findById(reservationId)
                 .orElseThrow(() -> new BadRequestException("There's no such reservation present with given id " + reservationId));
 
         if (reservation.getStatus().equals(ReservationStatus.CANCELLED)) {
             throw new BadRequestException("Can not be approved! It is cancelled!");
+        }
+
+        if (!reservation.getHostId().equals(hostId)) {
+            throw new BadRequestException("Can not be denied! You are not correct host!");
         }
 
         List<Reservation> requestedReservations = reservationRepository.findAllByAccommodationIdAndStatus(
@@ -188,7 +199,7 @@ public class ReservationServiceImpl implements ReservationService {
 
     @Override
     public boolean checkIfGuestCanBeDeleted(Long guestId) {
-        List<Reservation> reservations = reservationRepository.findAllByUserIdAndStatusAndStartDateAfter(
+        List<Reservation> reservations = reservationRepository.findAllByHostIdAndStatusAndStartDateAfter(
                 guestId, ReservationStatus.APPROVED, LocalDate.now());
         return reservations.size() == 0;
     }
@@ -196,7 +207,7 @@ public class ReservationServiceImpl implements ReservationService {
     private List<ReservationDetailsDTO> mapToDtosAndAttachUsers(List<Reservation> reservations, Map<Long, UserDetailsDTO> userDetailsDTOMap) {
         return reservations.stream().map(reservation -> {
             ReservationDetailsDTO reservationDetailsDTO = modelMapper.map(reservation, ReservationDetailsDTO.class);
-            reservationDetailsDTO.setUser(userDetailsDTOMap.get(reservation.getUserId()));
+            reservationDetailsDTO.setUser(userDetailsDTOMap.get(reservation.getGuestId()));
             return reservationDetailsDTO;
         }).toList();
     }

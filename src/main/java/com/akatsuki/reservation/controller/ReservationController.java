@@ -28,7 +28,8 @@ public class ReservationController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public void createReservation(@RequestBody CreateReservationDto createReservationDto, @RequestHeader("Authorization") final String token) { // TODO Add @Valid if DTO is validated
-        reservationService.createReservation(createReservationDto, token);
+        Long guestId = getIdFromToken(token);
+        reservationService.createReservation(createReservationDto, guestId, token);
     }
 
     @PutMapping("/cancel/{reservationId}")
@@ -56,16 +57,19 @@ public class ReservationController {
 
     @PutMapping("/deny/{reservationId}")
     @ResponseStatus(HttpStatus.OK)
-    public void denyReservationRequest(@PathVariable("reservationId") String reservationId) {
-        reservationService.denyReservation(reservationId);
+    public void denyReservationRequest(@PathVariable("reservationId") String reservationId, @RequestHeader("Authorization") final String token) {
+        Long hostId = getIdFromToken(token);
+        reservationService.denyReservation(reservationId, hostId);
     }
 
     @PutMapping("/approve/{reservationId}")
     @ResponseStatus(HttpStatus.OK)
-    public void approveReservationRequest(@PathVariable("reservationId") String reservationId) {
-        reservationService.approveReservation(reservationId);
+    public void approveReservationRequest(@PathVariable("reservationId") String reservationId, @RequestHeader("Authorization") final String token) {
+        Long hostId = getIdFromToken(token);
+        reservationService.approveReservation(reservationId, hostId);
     }
 
+    //    TODO: Probably get
     @PostMapping("/check-reservations-of-accommodation")
     @ResponseStatus(HttpStatus.OK)
     public boolean checkReservationsOfAccommodation(@RequestBody AccommodationInfoDTO accommodationInfoDTO) {
