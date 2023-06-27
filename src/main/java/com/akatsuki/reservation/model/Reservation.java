@@ -20,6 +20,7 @@ public class Reservation {
     private String id;
     private Long accommodationId;
     private Long userId;
+    private Long guestId;
     private LocalDate startDate;
     private LocalDate endDate;
     private int numberOfGuests;

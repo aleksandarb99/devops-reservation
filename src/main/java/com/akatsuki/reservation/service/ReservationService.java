@@ -12,12 +12,14 @@ public interface ReservationService {
     List<Reservation> getAllReservations();
 
     List<ReservationDetailsDTO> getReservations(ReservationStatus status, Long userId);
+    List<ReservationDetailsDTO> getReservationsByGuest(ReservationStatus status, Long guestId);
+
 
     List<ReservationDetailsDTO> getReservationsByAccommodation(ReservationStatus status, Long accommodationId);
 
     boolean checkReservationsOfAccommodation(AccommodationInfoDTO accommodationInfoDTO);
 
-    void createReservation(CreateReservationDto reservationDto, String token);
+    void createReservation(CreateReservationDto reservationDto, String token, Long guestId);
 
     void cancelReservation(String reservationId, String token);
 

@@ -33,7 +33,7 @@ public class ReservationServiceImpl implements ReservationService {
     }
 
     @Override
-    public void createReservation(CreateReservationDto createReservationDto, String token) {
+    public void createReservation(CreateReservationDto createReservationDto, String token, Long guestId) {
         AvailabilityCheckResponseDto availabilityCheckResponseDto = checkAccommodationAvailability(createReservationDto, token);
         // Check if accommodation is available for chosen dates
         if (!availabilityCheckResponseDto.isAvailable()) {
@@ -54,6 +54,8 @@ public class ReservationServiceImpl implements ReservationService {
         }
 
         Reservation reservation = modelMapper.map(createReservationDto, Reservation.class);
+        reservation.setGuestId(guestId);
+        reservation.setUserId(createReservationDto.getUser());
         // If it needs manual approval, save it as a request
         if (availabilityCheckResponseDto.isAutomaticApprove()) {
             reservation.setStatus(ReservationStatus.APPROVED);
@@ -91,6 +93,17 @@ public class ReservationServiceImpl implements ReservationService {
         }
 
         List<Reservation> reservations = reservationRepository.findAllByUserIdAndStatus(userId, status);
+        return mapToDtos(reservations);
+    }
+
+    @Override
+    public List<ReservationDetailsDTO> getReservationsByGuest(ReservationStatus status, Long guestId) {
+        if (status == null) {
+            List<Reservation> reservations = reservationRepository.findAllByGuestId(guestId);
+            return mapToDtos(reservations);
+        }
+
+        List<Reservation> reservations = reservationRepository.findAllByUserIdAndStatus(guestId, status);
         return mapToDtos(reservations);
     }
 
