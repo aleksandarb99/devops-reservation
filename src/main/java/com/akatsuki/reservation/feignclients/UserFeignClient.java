@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 @FeignClient(url = "${core.services.user-url}", value = "user-feign-client")
 public interface UserFeignClient {
 
-    @PutMapping("/cancellation/{id}")
-    void addCancellation(@RequestHeader("Authorization") final String token, @PathVariable Long id);
+    @PutMapping("/cancellation")
+    void addCancellation(@RequestHeader("Authorization") final String token);
 
 }

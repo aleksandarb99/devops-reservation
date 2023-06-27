@@ -73,8 +73,8 @@ public class ReservationServiceImpl implements ReservationService {
                 .orElseThrow(() -> new BadRequestException("There's no such reservation present with given id " + reservationId));
 
         if (reservation.getStatus().equals(ReservationStatus.APPROVED)) {
-            long differenceInMinutes = ChronoUnit.MINUTES.between(reservation.getStartDate(), LocalDateTime.now());
-            if (differenceInMinutes > 1440) {
+
+            if (!LocalDate.now().isBefore(reservation.getStartDate())) {
                 throw new BadRequestException("All up to one day before reservation check in, you are able to cancel it!");
             }
         }
@@ -82,7 +82,7 @@ public class ReservationServiceImpl implements ReservationService {
         reservation.setStatus(ReservationStatus.CANCELLED);
         reservationRepository.save(reservation);
 
-        userFeignClient.addCancellation(token, reservation.getUserId());
+        userFeignClient.addCancellation(token);
     }
 
     @Override
