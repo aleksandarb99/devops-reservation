@@ -28,6 +28,7 @@ public class DbInitializationStartupRunner implements ApplicationRunner {
                 .startDate(LocalDate.of(2023, 5, 10))
                 .endDate(LocalDate.of(2023, 5, 15))
                 .status(ReservationStatus.REQUESTED)
+                .totalPrice(500)
                 .numberOfGuests(3)
                 .build();
         var r2 = Reservation.builder()
@@ -38,6 +39,7 @@ public class DbInitializationStartupRunner implements ApplicationRunner {
                 .startDate(LocalDate.of(2023, 5, 10))
                 .endDate(LocalDate.of(2023, 5, 15))
                 .status(ReservationStatus.CANCELLED)
+                .totalPrice(300)
                 .numberOfGuests(4)
                 .build();
         var r3 = Reservation.builder()
@@ -48,6 +50,7 @@ public class DbInitializationStartupRunner implements ApplicationRunner {
                 .startDate(LocalDate.of(2023, 6, 5))
                 .endDate(LocalDate.of(2023, 6, 15))
                 .status(ReservationStatus.REQUESTED)
+                .totalPrice(1500)
                 .numberOfGuests(2)
                 .build();
         reservationRepository.saveAll(List.of(r1, r2, r3));
